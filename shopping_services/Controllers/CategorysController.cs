@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using shopping_services.Data;
 using shopping_services.Models;
+using shopping_services.Services.CategoryService;
 
 namespace shopping_services.Controllers
 {
@@ -9,19 +10,35 @@ namespace shopping_services.Controllers
     [ApiController]
     public class CategorysController : ControllerBase
     {
-        private readonly FE_DbContext _context;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public CategorysController(FE_DbContext context) {
-            _context = context;
+        public CategorysController(ICategoryRepository categoryRepository) {
+            _categoryRepository = categoryRepository;
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
 
-            var categorys = _context.Categorie.ToList();
+            try
+            {
+                return Ok(_categoryRepository.GetAll());
+            } catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
 
-            return Ok(categorys);
+        [HttpGet("{id}")]
+        public IActionResult GetbyId(string id) {
+            try
+            {
+                return Ok(_categoryRepository.GetbyId(id)); 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost]
@@ -30,19 +47,35 @@ namespace shopping_services.Controllers
             //Guid guid = Guid.NewGuid();
             try
             {
-                var model = new Category
-                {
-                    //category_id = Guid.NewGuid().ToString(),
-                    name = category.name
-                };
-                _context.Add(model);
-                _context.SaveChanges();
-                return Ok(model);
-
+                return Ok(_categoryRepository.PostCategory(category));
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(string id) {
+            try
+            {
+                return Ok(_categoryRepository.DeleteCategory(id));    
+            } catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(string id, CategoryModel category) {
+
+            try
+            {
+                return Ok(_categoryRepository.PutCategory(id, category));
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

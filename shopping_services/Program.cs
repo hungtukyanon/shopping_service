@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using shopping_services.Data;
+using shopping_services.Services.CategoryService;
+using shopping_services.Services.ProductService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,10 @@ builder.Services.AddDbContext<FE_DbContext>(o =>
 {
     o.UseNpgsql(builder.Configuration.GetConnectionString("MyDB"));
 });
+
+// Services
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 var app = builder.Build();
 
