@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using shopping_services.Data;
 using shopping_services.Services.AuthService;
@@ -10,20 +11,17 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Sercurity
-builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(o =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     var Key = Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]);
-    o.SaveToken = true;
-    o.TokenValidationParameters = new TokenValidationParameters
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = false,
         ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+        //ValidateLifetime = true,
+        //ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"],
         ValidAudience = builder.Configuration["JWT:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Key)
@@ -46,8 +44,6 @@ builder.Services.AddDbContext<FE_DbContext>(o =>
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
-
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-﻿namespace shopping_services.Data
+﻿namespace shopping_services.Models
 {
     public class Tokens
     {

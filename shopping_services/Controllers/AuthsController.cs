@@ -30,14 +30,12 @@ namespace shopping_services.Controllers
         [HttpPost("sign-in")]
         public IActionResult SingIn(string username, string password)
         {
-            try
+            var token = _authRepository.SignIn(username, password);
+            if(token == null)
             {
-                return Ok(_authRepository.SignIn(username, password));
+                return Unauthorized();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(token);
         }
 
         [HttpPost("sign-up")]

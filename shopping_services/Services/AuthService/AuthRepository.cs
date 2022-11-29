@@ -1,6 +1,8 @@
-﻿using shopping_services.Data;
+﻿using Microsoft.IdentityModel.Tokens;
+using shopping_services.Data;
 using shopping_services.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 namespace shopping_services.Services.AuthService
@@ -8,40 +10,48 @@ namespace shopping_services.Services.AuthService
     public class AuthRepository : IAuthRepository
     {
         private readonly FE_DbContext _context;
-        private object iconfiguration;
+        private IConfiguration _configuration;
 
-        public AuthRepository(FE_DbContext context)
+        public AuthRepository(FE_DbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
-        public string SignIn(string username, string password)
+        public Tokens SignIn(string username, string password)
         {
-            //var user = _context.Users.FirstOrDefault(u => u.username == username);
-            //if (user == null)
-            //{
-            //    return "Username or password is incorrect";
-            //}
-
-            //if (user.password == password)
-            //{
-            //    return "Sing In successfully";
-            //}
-            //else
-            //{
-            //    return "Username or password is incorrect";
-            //}
-            var user = _context.Users.Any(u => u.username == username && u.password == password);
-            if (!user)
+            var queyUser = _context.Users.AsEnumerable();
+            var checkedUser = queyUser.SingleOrDefault(u => u.username == username);
+            if (checkedUser == null)
             {
-                return "Username or password is incorrect";
+                return null;
             }
 
-            // Else we generate JSON Web Token
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenKey = Encoding.UTF8.GetBytes(_context["JWT:Key"]);
+            bool isValidPassword = BCrypt.Net.BCrypt.Verify(password, checkedUser.password);
+            if (isValidPassword)
+            {
+                // Else we generate JSON Web Token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenKey = Encoding.UTF8.GetBytes(_configuration["JWT:Key"]);
 
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new Claim[] {
+                    new Claim(ClaimTypes.Name, username)
+                }),
+                    Expires = DateTime.UtcNow.AddMinutes(10),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
 
+                // Save token 
+                var user = queyUser.FirstOrDefault(u => u.username == username);
+                user.RefresherToken = tokenHandler.WriteToken(token);
+                _context.SaveChanges();
+
+                return new Tokens { Token = tokenHandler.WriteToken(token) };
+            }
+            return null;
         }
 
         public string SignOut()
@@ -51,10 +61,12 @@ namespace shopping_services.Services.AuthService
 
         public string signUp(AuthModel authModel)
         {
+            var hashPassword = BCrypt.Net.BCrypt.HashPassword(authModel.password);
+
             var user = new User
             {
                 username = authModel.username,
-                password = authModel.password,
+                password = hashPassword,
                 email = authModel.email
             };
 
