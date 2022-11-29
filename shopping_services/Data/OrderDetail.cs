@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace shopping_services.Data
+﻿namespace shopping_services.Data
 {
     public class OrderDetail
     {

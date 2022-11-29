@@ -2,11 +2,11 @@
 
 namespace shopping_services.Data
 {
-    public class FE_DbContext: DbContext
+    public class FE_DbContext : DbContext
     {
-        public FE_DbContext(DbContextOptions options): base(options) { }
+        public FE_DbContext(DbContextOptions options) : base(options) { }
 
-     
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Category>(c =>
@@ -30,6 +30,13 @@ namespace shopping_services.Data
                 o.ToTable("Order");
                 o.HasKey("order_id");
             });
+            modelBuilder.Entity<User>(u =>
+            {
+                u.ToTable("User");
+                u.HasIndex(e => e.username).IsUnique();
+                u.Property(e => e.email).IsRequired().HasMaxLength(150);
+                u.HasKey("user_id");
+            });
 
 
             modelBuilder.Entity<OrderDetail>(e =>
@@ -52,6 +59,7 @@ namespace shopping_services.Data
         public DbSet<Category> Categorie { get; set; }
         public DbSet<OrderDetail> OrderDetail { get; set; }
         public DbSet<Order> Order { get; set; }
+        public DbSet<User> Users { get; set; }
         #endregion
 
     }
