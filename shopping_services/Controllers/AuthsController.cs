@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using shopping_services.Models;
 using shopping_services.Services.AuthService;
 
@@ -15,6 +16,7 @@ namespace shopping_services.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult GetUsers()
         {
             try
@@ -28,10 +30,10 @@ namespace shopping_services.Controllers
         }
 
         [HttpPost("sign-in")]
-        public IActionResult SingIn(string username, string password)
+        public IActionResult SingIn(SignIn signIn)
         {
-            var token = _authRepository.SignIn(username, password);
-            if(token == null)
+            var token = _authRepository.SignIn(signIn);
+            if (token == null)
             {
                 return Unauthorized();
             }

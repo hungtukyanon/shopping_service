@@ -18,38 +18,19 @@ namespace shopping_services.Services.AuthService
             _configuration = configuration;
         }
 
-        public Tokens SignIn(string username, string password)
+        public Tokens SignIn(SignIn signIn)
         {
             var queyUser = _context.Users.AsEnumerable();
-            var checkedUser = queyUser.SingleOrDefault(u => u.username == username);
+            var checkedUser = queyUser.SingleOrDefault(u => u.username == signIn.username);
             if (checkedUser == null)
             {
                 return null;
             }
 
-            bool isValidPassword = BCrypt.Net.BCrypt.Verify(password, checkedUser.password);
+            bool isValidPassword = BCrypt.Net.BCrypt.Verify(signIn.password, checkedUser.password);
             if (isValidPassword)
             {
-                // Else we generate JSON Web Token
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var tokenKey = Encoding.UTF8.GetBytes(_configuration["JWT:Key"]);
-
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(new Claim[] {
-                    new Claim(ClaimTypes.Name, username)
-                }),
-                    Expires = DateTime.UtcNow.AddMinutes(10),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
-                };
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-
-                // Save token 
-                var user = queyUser.FirstOrDefault(u => u.username == username);
-                user.RefresherToken = tokenHandler.WriteToken(token);
-                _context.SaveChanges();
-
-                return new Tokens { Token = tokenHandler.WriteToken(token) };
+                return GenerateToken(signIn);
             }
             return null;
         }
@@ -62,7 +43,6 @@ namespace shopping_services.Services.AuthService
         public string signUp(AuthModel authModel)
         {
             var hashPassword = BCrypt.Net.BCrypt.HashPassword(authModel.password);
-
             var user = new User
             {
                 username = authModel.username,
@@ -85,8 +65,31 @@ namespace shopping_services.Services.AuthService
                 password = user.password,
                 email = user.email
             });
-
             return users.ToList();
+        }
+
+        private Tokens GenerateToken(SignIn signIn)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenKey = Encoding.UTF8.GetBytes(_configuration["JWT:Key"]);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[] {
+                    new Claim(ClaimTypes.Name, signIn.username),
+                    new Claim(ClaimTypes.Role, "Admin"),
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(10),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            // Save token 
+            var user = _context.Users.FirstOrDefault(u => u.username == signIn.username);
+            user.RefresherToken = tokenHandler.WriteToken(token);
+            _context.SaveChanges();
+
+            return new Tokens { Token = tokenHandler.WriteToken(token) };
         }
     }
 }

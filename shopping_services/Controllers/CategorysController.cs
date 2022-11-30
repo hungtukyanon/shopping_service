@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using shopping_services.Data;
 using shopping_services.Models;
 using shopping_services.Services.CategoryService;
 
@@ -8,11 +7,13 @@ namespace shopping_services.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategorysController : ControllerBase
     {
         private readonly ICategoryRepository _categoryRepository;
 
-        public CategorysController(ICategoryRepository categoryRepository) {
+        public CategorysController(ICategoryRepository categoryRepository)
+        {
             _categoryRepository = categoryRepository;
         }
 
@@ -23,17 +24,19 @@ namespace shopping_services.Controllers
             try
             {
                 return Ok(_categoryRepository.GetAll());
-            } catch
+            }
+            catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetbyId(string id) {
+        public IActionResult GetbyId(string id)
+        {
             try
             {
-                return Ok(_categoryRepository.GetbyId(id)); 
+                return Ok(_categoryRepository.GetbyId(id));
             }
             catch (Exception ex)
             {
@@ -56,18 +59,21 @@ namespace shopping_services.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(string id) {
+        public IActionResult Delete(string id)
+        {
             try
             {
-                return Ok(_categoryRepository.DeleteCategory(id));    
-            } catch
+                return Ok(_categoryRepository.DeleteCategory(id));
+            }
+            catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(string id, CategoryModel category) {
+        public IActionResult Update(string id, CategoryModel category)
+        {
 
             try
             {

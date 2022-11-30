@@ -1,15 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql.Internal.TypeHandlers;
-using shopping_services.Data;
 using shopping_services.Models;
 using shopping_services.Services.ProductService;
-using System;
 
 namespace shopping_services.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
@@ -20,7 +18,8 @@ namespace shopping_services.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll() {
+        public IActionResult GetAll()
+        {
             try
             {
                 return Ok(_productRepository.GetAll());
@@ -32,7 +31,8 @@ namespace shopping_services.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(ProductModel productModel) {
+        public IActionResult Create(ProductModel productModel)
+        {
             Console.WriteLine(productModel);
 
             try
@@ -62,7 +62,7 @@ namespace shopping_services.Controllers
 
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(string id) 
+        public IActionResult Delete(string id)
         {
             if (string.IsNullOrEmpty(id)) { return BadRequest(); }
             try
@@ -73,9 +73,10 @@ namespace shopping_services.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(string id, ProductModel productModel) {
-            if(string.IsNullOrEmpty(id)) { return BadRequest(); }
-            
+        public IActionResult Update(string id, ProductModel productModel)
+        {
+            if (string.IsNullOrEmpty(id)) { return BadRequest(); }
+
             try
             {
                 return Ok(_productRepository.UpdateById(id, productModel));
@@ -88,7 +89,7 @@ namespace shopping_services.Controllers
         {
             try
             {
-                return Ok(_productRepository.Search(name,from,to));
+                return Ok(_productRepository.Search(name, from, to));
             }
             catch { return BadRequest(); }
         }

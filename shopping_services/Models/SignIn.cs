@@ -2,7 +2,7 @@
 
 namespace shopping_services.Models
 {
-    public class AuthModel
+    public class SignIn
     {
         [Required(ErrorMessage = "Username is required")]
         [MaxLength(100)]
@@ -10,8 +10,5 @@ namespace shopping_services.Models
         [Required(ErrorMessage = "Password is required")]
         [MaxLength(100)]
         public string password { get; set; }
-        [Required]
-        [MaxLength(100)]
-        public string email { get; set; }
     }
 }
